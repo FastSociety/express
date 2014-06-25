@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 describe('res', function(){
   describe('.clearCookie(name)', function(){
@@ -20,7 +20,7 @@ describe('res', function(){
       })
     })
   })
-
+  
   describe('.clearCookie(name, options)', function(){
     it('should set the given params', function(done){
       var app = express();

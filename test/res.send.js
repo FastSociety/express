@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest')
+  , request = require('./support/http')
   , assert = require('assert');
 
 describe('res', function(){
@@ -14,7 +14,6 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('Content-Length', '0')
       .expect('', done);
     })
   })
@@ -29,10 +28,7 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('', function(req, res){
-        res.header.should.not.have.property('content-length');
-        done();
-      });
+      .expect('', done);
     })
   })
 
@@ -109,7 +105,7 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('ETag', 'W/"7ff-2796319984"')
+      .expect('ETag', '"-1498647312"')
       .end(done);
     })
 
@@ -139,34 +135,9 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('Content-Type', 'text/plain; charset=utf-8')
-      .expect(200, 'hey', done);
-    })
-
-    it('should override charset in Content-Type', function(done){
-      var app = express();
-
-      app.use(function(req, res){
-        res.set('Content-Type', 'text/plain; charset=iso-8859-1').send('hey');
-      });
-
-      request(app)
-      .get('/')
-      .expect('Content-Type', 'text/plain; charset=utf-8')
-      .expect(200, 'hey', done);
-    })
-
-    it('should keep charset in Content-Type for Buffers', function(done){
-      var app = express();
-
-      app.use(function(req, res){
-        res.set('Content-Type', 'text/plain; charset=iso-8859-1').send(new Buffer('hi'));
-      });
-
-      request(app)
-      .get('/')
-      .expect('Content-Type', 'text/plain; charset=iso-8859-1')
-      .expect(200, 'hi', done);
+      .expect('Content-Type', 'text/plain')
+      .expect('hey')
+      .expect(200, done);
     })
   })
 
@@ -198,7 +169,7 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('ETag', 'W/"7ff-2796319984"')
+      .expect('ETag', '"-1498647312"')
       .end(done);
     })
 
@@ -212,7 +183,7 @@ describe('res', function(){
       request(app)
       .get('/')
       .end(function(err, res){
-        res.headers.should.have.property('content-type', 'text/plain; charset=utf-8');
+        res.headers.should.have.property('content-type', 'text/plain');
         res.text.should.equal('hey');
         res.statusCode.should.equal(200);
         done();
@@ -230,8 +201,11 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('Content-Type', 'application/json; charset=utf-8')
-      .expect(200, '{"name":"tobi"}', done)
+      .end(function(err, res){
+        res.headers.should.have.property('content-type', 'application/json; charset=utf-8');
+        res.text.should.equal('{"name":"tobi"}');
+        done();
+      })
     })
   })
 
@@ -291,16 +265,15 @@ describe('res', function(){
 
   it('should always check regardless of length', function(done){
     var app = express();
-    var etag = '"asdf"';
 
     app.use(function(req, res, next){
-      res.set('ETag', etag);
+      res.set('ETag', 'asdf');
       res.send('hey');
     });
 
     request(app)
     .get('/')
-    .set('If-None-Match', etag)
+    .set('If-None-Match', 'asdf')
     .expect(304, done);
   })
 
@@ -314,23 +287,22 @@ describe('res', function(){
 
     request(app)
     .get('/')
-    .set('If-None-Match', 'W/"7ff-2796319984"')
+    .set('If-None-Match', '"-1498647312"')
     .expect(304, done);
   })
 
   it('should not perform freshness check unless 2xx or 304', function(done){
     var app = express();
-    var etag = '"asdf"';
 
     app.use(function(req, res, next){
       res.status(500);
-      res.set('ETag', etag);
+      res.set('ETag', 'asdf');
       res.send('hey');
     });
 
     request(app)
     .get('/')
-    .set('If-None-Match', etag)
+    .set('If-None-Match', 'asdf')
     .expect('hey')
     .expect(500, done);
   })
@@ -349,35 +321,22 @@ describe('res', function(){
 
   describe('"etag" setting', function(){
     describe('when enabled', function(){
-      it('should send ETag', function(done){
+      it('should send ETag even when content-length < 1024', function(done){
         var app = express();
 
         app.use(function(req, res){
           res.send('kajdslfkasdf');
         });
 
-        app.enable('etag');
-
         request(app)
         .get('/')
-        .expect('etag', 'W/"c-1525560792"', done)
-      })
-
-      it('should send ETag for empty string response', function(done){
-        var app = express()
-
-        app.use(function(req, res){
-          res.send('')
+        .end(function(err, res){
+          res.headers.should.have.property('etag');
+          done();
         });
-
-        app.enable('etag')
-
-        request(app)
-        .get('/')
-        .expect('etag', 'W/"0-0"', done)
       })
 
-      it('should send ETag for long response', function(done){
+      it('should send ETag ', function(done){
         var app = express();
 
         app.use(function(req, res){
@@ -385,44 +344,13 @@ describe('res', function(){
           res.send(str);
         });
 
-        app.enable('etag');
-
-        request(app)
-        .get('/')
-        .expect('etag', 'W/"7ff-2796319984"', done)
-      });
-
-      it('should not override ETag when manually set', function(done){
-        var app = express();
-
-        app.use(function(req, res){
-          res.set('etag', '"asdf"');
-          res.send(200);
-        });
-
-        app.enable('etag');
-
-        request(app)
-        .get('/')
-        .expect('etag', '"asdf"', done)
-      });
-
-      it('should not send ETag for res.send()', function(done){
-        var app = express()
-
-        app.use(function(req, res){
-          res.send()
-        });
-
-        app.enable('etag')
-
         request(app)
         .get('/')
         .end(function(err, res){
-          res.headers.should.not.have.property('etag');
+          res.headers.should.have.property('etag', '"-1498647312"');
           done();
-        })
-      })
+        });
+      });
     });
 
     describe('when disabled', function(){
@@ -450,85 +378,17 @@ describe('res', function(){
         app.disable('etag');
 
         app.use(function(req, res){
-          res.set('etag', '"asdf"');
+          res.set('etag', 1);
           res.send(200);
         });
 
         request(app)
         .get('/')
-        .expect('etag', '"asdf"', done)
+        .end(function(err, res){
+          res.headers.should.have.property('etag');
+          done();
+        });
       });
     });
-
-    describe('when "strong"', function(){
-      it('should send strong ETag', function(done){
-        var app = express()
-
-        app.set('etag', 'strong');
-
-        app.use(function(req, res){
-          res.send('hello, world!');
-        });
-
-        request(app)
-        .get('/')
-        .expect('etag', '"Otu60XkfuuPskIiUxJY4cA=="', done)
-      })
-    })
-
-    describe('when "weak"', function(){
-      it('should send weak ETag', function(done){
-        var app = express()
-
-        app.set('etag', 'weak');
-
-        app.use(function(req, res){
-          res.send('hello, world!');
-        });
-
-        request(app)
-        .get('/')
-        .expect('etag', 'W/"d-1486392595"', done)
-      })
-    })
-
-    describe('when a function', function(){
-      it('should send custom ETag', function(done){
-        var app = express()
-
-        app.set('etag', function(body, encoding){
-          body.should.equal('hello, world!')
-          encoding.should.equal('utf8')
-          return '"custom"'
-        });
-
-        app.use(function(req, res){
-          res.send('hello, world!');
-        });
-
-        request(app)
-        .get('/')
-        .expect('etag', '"custom"', done)
-      })
-
-      it('should not send falsy ETag', function(done){
-        var app = express()
-
-        app.set('etag', function(body, encoding){
-          return undefined
-        });
-
-        app.use(function(req, res){
-          res.send('hello, world!');
-        });
-
-        request(app)
-        .get('/')
-        .end(function(err, res){
-          res.headers.should.not.have.property('etag')
-          done();
-        })
-      })
-    })
   })
 })

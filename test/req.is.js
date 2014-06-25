@@ -1,14 +1,11 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 function req(ct) {
   var req = {
-    headers: {
-      'content-type': ct,
-      'transfer-encoding': 'chunked'
-    },
-    __proto__: express.request
+      headers: { 'content-type': ct }
+    , __proto__: express.request
   };
 
   return req;
@@ -16,9 +13,9 @@ function req(ct) {
 
 describe('req.is()', function(){
   it('should ignore charset', function(){
-    req('application/json')
+    req('application/json; charset=utf-8')
     .is('json')
-    .should.equal('json');
+    .should.be.true;
   })
 
   describe('when content-type is not present', function(){
@@ -33,7 +30,7 @@ describe('req.is()', function(){
     it('should lookup the mime type', function(){
       req('application/json')
       .is('json')
-      .should.equal('json');
+      .should.be.true;
 
       req('text/html')
       .is('json')
@@ -45,7 +42,7 @@ describe('req.is()', function(){
     it('should match', function(){
       req('application/json')
       .is('application/json')
-      .should.equal('application/json');
+      .should.be.true;
 
       req('image/jpeg')
       .is('application/json')
@@ -57,7 +54,7 @@ describe('req.is()', function(){
     it('should match', function(){
       req('application/json')
       .is('*/json')
-      .should.equal('application/json');
+      .should.be.true;
 
       req('image/jpeg')
       .is('*/json')
@@ -68,7 +65,7 @@ describe('req.is()', function(){
       it('should match', function(){
         req('text/html; charset=utf-8')
         .is('*/html')
-        .should.equal('text/html');
+        .should.be.true;
 
         req('text/plain; charset=utf-8')
         .is('*/html')
@@ -81,7 +78,7 @@ describe('req.is()', function(){
     it('should match', function(){
       req('image/png')
       .is('image/*')
-      .should.equal('image/png');
+      .should.be.true;
 
       req('text/html')
       .is('image/*')
@@ -92,7 +89,7 @@ describe('req.is()', function(){
       it('should match', function(){
         req('text/html; charset=utf-8')
         .is('text/*')
-        .should.equal('text/html');
+        .should.be.true;
 
         req('something/html; charset=utf-8')
         .is('text/*')

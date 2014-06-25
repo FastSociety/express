@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 describe('app.del()', function(){
   it('should alias app.delete()', function(done){

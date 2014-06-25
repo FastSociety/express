@@ -1,24 +1,31 @@
+
 /**
  * Module dependencies.
  */
 
-var express = require('../../');
-var app = module.exports = express();
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+var express = require('../../')
+  , app = module.exports = express();
+
+
+// add favicon() before logger() so
+// GET /favicon.ico requests are not
+// logged, because this middleware
+// reponds to /favicon.ico and does not
+// call next()
+app.use(express.favicon());
 
 // custom log format
-if ('test' != process.env.NODE_ENV) app.use(logger(':method :url'));
+if ('test' != process.env.NODE_ENV)
+  app.use(express.logger(':method :url'));
 
 // parses request cookies, populating
 // req.cookies and req.signedCookies
-// when the secret is passed, used
+// when the secret is passed, used 
 // for signing the cookies.
-app.use(cookieParser('my secret here'));
+app.use(express.cookieParser('my secret here'));
 
-// parses x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+// parses json, x-www-form-urlencoded, and multipart/form-data
+app.use(express.bodyParser());
 
 app.get('/', function(req, res){
   if (req.cookies.remember) {
@@ -41,8 +48,7 @@ app.post('/', function(req, res){
   res.redirect('back');
 });
 
-/* istanbul ignore next */
-if (!module.parent) {
+if (!module.parent){
   app.listen(3000);
   console.log('Express started on port 3000');
 }

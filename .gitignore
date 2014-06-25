@@ -1,5 +1,6 @@
-coverage/
+coverage.html
 .DS_Store
+lib-cov
 *.seed
 *.log
 *.csv
@@ -12,5 +13,7 @@ benchmarks/graphs
 testing
 node_modules/
 testing
+.coverage_data
+cover_html
 test.js
 .idea

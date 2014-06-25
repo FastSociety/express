@@ -1,21 +1,22 @@
-/**
- * Module dependencies.
- */
+
 
 var express = require('../..');
-var logger = require('morgan');
-var session = require('express-session');
 
 // pass the express to the connect redis module
-// allowing it to inherit from session.Store
-var RedisStore = require('connect-redis')(session);
+// allowing it to inherit from express.session.Store
+var RedisStore = require('connect-redis')(express);
 
 var app = express();
 
-app.use(logger('dev'));
+app.use(express.logger('dev'));
+
+// Required by session() middleware
+// pass the secret for signed cookies
+// (required by session())
+app.use(express.cookieParser('keyboard cat'));
 
 // Populates req.session
-app.use(session({ store: new RedisStore, secret: 'keyboard cat' }));
+app.use(express.session({ store: new RedisStore }));
 
 app.get('/', function(req, res){
   var body = '';

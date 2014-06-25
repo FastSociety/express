@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 describe('app', function(){
   it('should emit "mount" when mounted', function(done){
@@ -15,11 +15,6 @@ describe('app', function(){
     app.use(blog);
   })
 
-  it('should reject numbers', function(){
-    var app = express();
-    app.use.bind(app, 3).should.throw(/Number/);
-  })
-
   describe('.use(app)', function(){
     it('should mount the app', function(done){
       var blog = express()
@@ -28,7 +23,7 @@ describe('app', function(){
       blog.get('/blog', function(req, res){
         res.end('blog');
       });
-
+      
       app.use(blog);
 
       request(app)
@@ -67,21 +62,6 @@ describe('app', function(){
 
       app.use('/blog', blog);
       blog.parent.should.equal(app);
-    })
-
-    it('should support dynamic routes', function(done){
-      var blog = express()
-        , app = express();
-
-      blog.get('/', function(req, res){
-        res.end('success');
-      });
-
-      app.use('/post/:article', blog);
-
-      request(app)
-      .get('/post/once-upon-a-time')
-      .expect('success', done);
     })
   })
 })

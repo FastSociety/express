@@ -1,12 +1,7 @@
-/**
- * Module dependencies.
- */
 
-var express = require('../../lib/express');
-
-var verbose = process.env.NODE_ENV != 'test';
-
-var app = module.exports = express();
+var express = require('../../lib/express')
+  , verbose = process.env.NODE_ENV != 'test'
+  , app = module.exports = express();
 
 app.map = function(a, route){
   route = route || '';
@@ -34,7 +29,7 @@ var users = {
     res.send('user ' + req.params.uid);
   },
 
-  delete: function(req, res){
+  del: function(req, res){
     res.send('delete users');
   }
 };
@@ -44,7 +39,7 @@ var pets = {
     res.send('user ' + req.params.uid + '\'s pets');
   },
 
-  delete: function(req, res){
+  del: function(req, res){
     res.send('delete ' + req.params.uid + '\'s pet ' + req.params.pid);
   }
 };
@@ -52,21 +47,17 @@ var pets = {
 app.map({
   '/users': {
     get: users.list,
-    delete: users.delete,
+    del: users.del,
     '/:uid': {
       get: users.get,
       '/pets': {
         get: pets.list,
         '/:pid': {
-          delete: pets.delete
+          del: pets.del
         }
       }
     }
   }
 });
 
-/* istanbul ignore next */
-if (!module.parent) {
-  app.listen(3000);
-  console.log('Express started on port 3000');
-}
+app.listen(3000);

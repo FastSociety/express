@@ -2,10 +2,9 @@
  * Module dependencies.
  */
 
-var express = require('../../');
-var app = module.exports = express();
-var logger = require('morgan');
-var silent = 'test' == process.env.NODE_ENV;
+var express = require('../../')
+  , app = module.exports = express()
+  , silent = 'test' == process.env.NODE_ENV;
 
 // general config
 app.set('views', __dirname + '/views');
@@ -18,36 +17,22 @@ app.enable('verbose errors');
 
 // disable them in production
 // use $ NODE_ENV=production node examples/error-pages
-if ('production' == app.settings.env) app.disable('verbose errors');
+if ('production' == app.settings.env) {
+  app.disable('verbose errors');
+}
 
-silent || app.use(logger('dev'));
+app.use(express.favicon());
 
-// Routes
+silent || app.use(express.logger('dev'));
 
-app.get('/', function(req, res){
-  res.render('index.jade');
-});
+// "app.router" positions our routes 
+// above the middleware defined below,
+// this means that Express will attempt
+// to match & call routes _before_ continuing
+// on, at which point we assume it's a 404 because
+// no route has handled the request.
 
-app.get('/404', function(req, res, next){
-  // trigger a 404 since no other middleware
-  // will match /404 after this one, and we're not
-  // responding here
-  next();
-});
-
-app.get('/403', function(req, res, next){
-  // trigger a 403 error
-  var err = new Error('not allowed!');
-  err.status = 403;
-  next(err);
-});
-
-app.get('/500', function(req, res, next){
-  // trigger a generic (500) error
-  next(new Error('keyboard cat!'));
-});
-
-// Error handlers
+app.use(app.router);
 
 // Since this is the last non-error-handling
 // middleware use()d, we assume 404, as nothing else
@@ -59,7 +44,7 @@ app.get('/500', function(req, res, next){
 
 app.use(function(req, res, next){
   res.status(404);
-
+  
   // respond with html page
   if (req.accepts('html')) {
     res.render('404', { url: req.url });
@@ -96,9 +81,32 @@ app.use(function(err, req, res, next){
   res.render('500', { error: err });
 });
 
+// Routes
 
-/* istanbul ignore next */
+app.get('/', function(req, res){
+  res.render('index.jade');
+});
+
+app.get('/404', function(req, res, next){
+  // trigger a 404 since no other middleware
+  // will match /404 after this one, and we're not
+  // responding here
+  next();
+});
+
+app.get('/403', function(req, res, next){
+  // trigger a 403 error
+  var err = new Error('not allowed!');
+  err.status = 403;
+  next(err);
+});
+
+app.get('/500', function(req, res, next){
+  // trigger a generic (500) error
+  next(new Error('keyboard cat!'));
+});
+
 if (!module.parent) {
   app.listen(3000);
-  console.log('Express started on port 3000');
+  silent || console.log('Express started on port 3000');
 }

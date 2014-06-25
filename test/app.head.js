@@ -1,7 +1,7 @@
 
-var express = require('../');
-var request = require('supertest');
-var assert = require('assert');
+var express = require('../')
+  , request = require('./support/http')
+  , assert = require('assert');
 
 describe('HEAD', function(){
   it('should default to GET', function(done){
@@ -15,29 +15,6 @@ describe('HEAD', function(){
     request(app)
     .head('/tobi')
     .expect(200, done);
-  })
-
-  it('should output the same headers as GET requests', function(done){
-    var app = express();
-
-    app.get('/tobi', function(req, res){
-      // send() detects HEAD
-      res.send('tobi');
-    });
-
-    request(app)
-    .get('/tobi')
-    .expect(200, function(err, res){
-      if (err) return done(err);
-      var headers = res.headers;
-      request(app)
-      .get('/tobi')
-      .expect(200, function(err, res){
-        if (err) return done(err);
-        assert.deepEqual(res.headers, headers);
-        done();
-      });
-    });
   })
 })
 

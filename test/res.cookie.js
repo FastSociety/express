@@ -1,9 +1,8 @@
 
 var express = require('../')
-  , request = require('supertest')
-  , mixin = require('utils-merge')
-  , cookie = require('cookie')
-  , cookieParser = require('cookie-parser')
+  , request = require('./support/http')
+  , utils = require('connect').utils
+  , cookie = require('cookie');
 
 describe('res', function(){
   describe('.cookie(name, object)', function(){
@@ -40,27 +39,26 @@ describe('res', function(){
         done();
       })
     })
-
+    
     it('should allow multiple calls', function(done){
       var app = express();
 
       app.use(function(req, res){
         res.cookie('name', 'tobi');
         res.cookie('age', 1);
-        res.cookie('gender', '?');
         res.end();
       });
 
       request(app)
       .get('/')
       .end(function(err, res){
-        var val = ['name=tobi; Path=/', 'age=1; Path=/', 'gender=%3F; Path=/'];
+        var val = ['name=tobi; Path=/', 'age=1; Path=/'];
         res.headers['set-cookie'].should.eql(val);
         done();
       })
     })
   })
-
+  
   describe('.cookie(name, string, options)', function(){
     it('should set params', function(done){
       var app = express();
@@ -78,7 +76,7 @@ describe('res', function(){
         done();
       })
     })
-
+    
     describe('maxAge', function(){
       it('should set relative expires', function(done){
         var app = express();
@@ -91,7 +89,7 @@ describe('res', function(){
         request(app)
         .get('/')
         .end(function(err, res){
-          res.headers['set-cookie'][0].should.not.containEql('Thu, 01 Jan 1970 00:00:01 GMT');
+          res.headers['set-cookie'][0].should.not.include('Thu, 01 Jan 1970 00:00:01 GMT');
           done();
         })
       })
@@ -106,14 +104,17 @@ describe('res', function(){
 
         request(app)
         .get('/')
-        .expect('Set-Cookie', /Max-Age=1/, done)
+        .end(function(err, res){
+          res.headers['set-cookie'][0].should.include('Max-Age=1');
+          done();
+        })
       })
 
       it('should not mutate the options object', function(done){
         var app = express();
 
         var options = { maxAge: 1000 };
-        var optionsCopy = mixin({}, options);
+        var optionsCopy = utils.merge({}, options);
 
         app.use(function(req, res){
           res.cookie('name', 'tobi', options)
@@ -133,7 +134,7 @@ describe('res', function(){
       it('should generate a signed JSON cookie', function(done){
         var app = express();
 
-        app.use(cookieParser('foo bar baz'));
+        app.use(express.cookieParser('foo bar baz'));
 
         app.use(function(req, res){
           res.cookie('user', { name: 'tobi' }, { signed: true }).end();
@@ -154,7 +155,7 @@ describe('res', function(){
       it('should set a signed cookie', function(done){
         var app = express();
 
-        app.use(cookieParser('foo bar baz'));
+        app.use(express.cookieParser('foo bar baz'));
 
         app.use(function(req, res){
           res.cookie('name', 'tobi', { signed: true }).end();

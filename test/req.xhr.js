@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 describe('req', function(){
   describe('.xhr', function(){
@@ -15,12 +15,11 @@ describe('req', function(){
       request(app)
       .get('/')
       .set('X-Requested-With', 'xmlhttprequest')
-      .expect(200)
-      .end(function(err, res){
-        done(err);
+      .end(function(res){
+        done();
       })
     })
-
+    
     it('should case-insensitive', function(done){
       var app = express();
 
@@ -32,12 +31,11 @@ describe('req', function(){
       request(app)
       .get('/')
       .set('X-Requested-With', 'XMLHttpRequest')
-      .expect(200)
-      .end(function(err, res){
-        done(err);
+      .end(function(res){
+        done();
       })
     })
-
+    
     it('should return false otherwise', function(done){
       var app = express();
 
@@ -49,12 +47,11 @@ describe('req', function(){
       request(app)
       .get('/')
       .set('X-Requested-With', 'blahblah')
-      .expect(200)
-      .end(function(err, res){
-        done(err);
+      .end(function(res){
+        done();
       })
     })
-
+    
     it('should return false when not present', function(done){
       var app = express();
 
@@ -65,9 +62,8 @@ describe('req', function(){
 
       request(app)
       .get('/')
-      .expect(200)
-      .end(function(err, res){
-        done(err);
+      .end(function(res){
+        done();
       })
     })
   })

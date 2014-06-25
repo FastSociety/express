@@ -1,3 +1,4 @@
+
 // first:
 // $ npm install redis
 // $ redis-server
@@ -6,10 +7,9 @@
  * Module dependencies.
  */
 
-var express = require('../..');
-var redis = require('redis');
-
-var db = redis.createClient();
+var express = require('../..')
+  , redis = require('redis')
+  , db = redis.createClient();
 
 // npm install redis
 
@@ -57,8 +57,5 @@ app.get('/client.js', function(req, res){
   res.sendfile(__dirname + '/client.js');
 });
 
-/* istanbul ignore next */
-if (!module.parent) {
-  app.listen(3000);
-  console.log('Express started on port 3000');
-}
+app.listen(3000);
+console.log('app listening on port 3000');

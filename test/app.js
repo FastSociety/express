@@ -1,24 +1,12 @@
 
-var assert = require('assert')
-var express = require('..')
-var request = require('supertest')
+var express = require('../')
+  , assert = require('assert');
 
 describe('app', function(){
   it('should inherit from event emitter', function(done){
     var app = express();
     app.on('foo', done);
     app.emit('foo');
-  })
-
-  it('should be callable', function(){
-    var app = express();
-    assert(typeof app, 'function');
-  })
-
-  it('should 404 without routes', function(done){
-    request(express())
-    .get('/')
-    .expect(404, done);
   })
 })
 
@@ -37,7 +25,7 @@ describe('app.parent', function(){
   })
 })
 
-describe('app.mountpath', function(){
+describe('app.route', function(){
   it('should return the mounted path', function(){
     var app = express()
       , blog = express()
@@ -46,21 +34,9 @@ describe('app.mountpath', function(){
     app.use('/blog', blog);
     blog.use('/admin', blogAdmin);
 
-    app.mountpath.should.equal('/');
-    blog.mountpath.should.equal('/blog');
-    blogAdmin.mountpath.should.equal('/admin');
-  })
-})
-
-describe('app.router', function(){
-  it('should throw with notice', function(done){
-    var app = express()
-
-    try {
-      app.router;
-    } catch(err) {
-      done();
-    }
+    app.route.should.equal('/');
+    blog.route.should.equal('/blog');
+    blogAdmin.route.should.equal('/admin');
   })
 })
 
@@ -93,15 +69,6 @@ describe('in production', function(){
     process.env.NODE_ENV = 'production';
     var app = express();
     app.enabled('view cache').should.be.true;
-    process.env.NODE_ENV = 'test';
-  })
-})
-
-describe('without NODE_ENV', function(){
-  it('should default to development', function(){
-    process.env.NODE_ENV = '';
-    var app = express();
-    app.get('env').should.equal('development');
     process.env.NODE_ENV = 'test';
   })
 })
