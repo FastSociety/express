@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('./support/http')
+  , request = require('supertest')
   , assert = require('assert');
 
 describe('res', function(){
@@ -9,11 +9,7 @@ describe('res', function(){
       var app = express();
 
       app.use(function(req, res){
-        res.sendfile('test/fixtures/user.html', function(err){
-          assert(!err);
-          req.socket.listeners('error').should.have.length(1); // node's original handler
-          done();
-        });
+        res.sendfile('test/fixtures/user.html', done)
       });
 
       request(app)
@@ -42,7 +38,7 @@ describe('res', function(){
       app.use(function(req, res){
         res.sendfile('test/fixtures/nope.html', function(err){
           ++calls;
-          assert(!res.headerSent);
+          assert(!res.headersSent);
           res.send(err.message);
         });
       });
@@ -67,7 +63,7 @@ describe('res', function(){
 
       request(app)
       .get('/')
-      .expect('Content-Type', 'text/plain')
+      .expect('Content-Type', 'text/plain; charset=utf-8')
       .end(done);
     })
 
@@ -77,7 +73,7 @@ describe('res', function(){
 
       app.use(function(req, res){
         res.sendfile('test/fixtures/foo/../user.html', function(err){
-          assert(!res.headerSent);
+          assert(!res.headersSent);
           ++calls;
           res.send(err.message);
         });
@@ -95,7 +91,7 @@ describe('res', function(){
 
       app.use(function(req, res){
         res.sendfile('test/fixtures/user.html', function(err){
-          assert(!res.headerSent);
+          assert(!res.headersSent);
           req.socket.listeners('error').should.have.length(1); // node's original handler
           done();
         });
@@ -110,6 +106,30 @@ describe('res', function(){
   })
 
   describe('.sendfile(path)', function(){
+    it('should not serve hidden files', function(done){
+      var app = express();
+
+      app.use(function(req, res){
+        res.sendfile('test/fixtures/.name');
+      });
+
+      request(app)
+      .get('/')
+      .expect(404, done);
+    })
+
+    it('should accept hidden option', function(done){
+      var app = express();
+
+      app.use(function(req, res){
+        res.sendfile('test/fixtures/.name', { hidden: true });
+      });
+
+      request(app)
+      .get('/')
+      .expect(200, 'tobi', done);
+    })
+
     describe('with an absolute path', function(){
       it('should transfer the file', function(done){
         var app = express();

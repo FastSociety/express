@@ -25,7 +25,7 @@ describe('app.parent', function(){
   })
 })
 
-describe('app.route', function(){
+describe('app.mountpath', function(){
   it('should return the mounted path', function(){
     var app = express()
       , blog = express()
@@ -34,9 +34,21 @@ describe('app.route', function(){
     app.use('/blog', blog);
     blog.use('/admin', blogAdmin);
 
-    app.route.should.equal('/');
-    blog.route.should.equal('/blog');
-    blogAdmin.route.should.equal('/admin');
+    app.mountpath.should.equal('/');
+    blog.mountpath.should.equal('/blog');
+    blogAdmin.mountpath.should.equal('/admin');
+  })
+})
+
+describe('app.router', function(){
+  it('should throw with notice', function(done){
+    var app = express()
+
+    try {
+      app.router;
+    } catch(err) {
+      done();
+    }
   })
 })
 
@@ -69,6 +81,15 @@ describe('in production', function(){
     process.env.NODE_ENV = 'production';
     var app = express();
     app.enabled('view cache').should.be.true;
+    process.env.NODE_ENV = 'test';
+  })
+})
+
+describe('without NODE_ENV', function(){
+  it('should default to development', function(){
+    process.env.NODE_ENV = '';
+    var app = express();
+    app.get('env').should.equal('development');
     process.env.NODE_ENV = 'test';
   })
 })

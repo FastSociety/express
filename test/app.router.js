@@ -1,14 +1,15 @@
 
 var express = require('../')
-  , request = require('./support/http')
+  , request = require('supertest')
   , assert = require('assert')
   , methods = require('methods');
 
 describe('app.router', function(){
   describe('methods supported', function(){
-    methods.forEach(function(method){
+    methods.concat('del').forEach(function(method){
+      if (method === 'connect') return;
+
       it('should include ' + method.toUpperCase(), function(done){
-        if (method == 'delete') method = 'del';
         var app = express();
         var calls = [];
 
@@ -23,6 +24,11 @@ describe('app.router', function(){
         request(app)
         [method]('/foo')
         .expect('head' == method ? '' : method, done);
+      })
+
+      it('should reject numbers for app.' + method, function(){
+        var app = express();
+        app[method].bind(app, '/', 3).should.throw(/Number/);
       })
     });
   })
@@ -87,36 +93,6 @@ describe('app.router', function(){
       next();
     });
 
-    app.use(app.router);
-
-    app.use(function(req, res, next){
-      calls.push('after');
-      res.end();
-    });
-
-    app.get('/', function(req, res, next){
-      calls.push('GET /')
-      next();
-    });
-
-    request(app)
-    .get('/')
-    .end(function(res){
-      calls.should.eql(['before', 'GET /', 'after'])
-      done();
-    })
-  })
-
-  it('should be auto .use()d on the first app.VERB() call', function(done){
-    var app = express();
-
-    var calls = [];
-
-    app.use(function(req, res, next){
-      calls.push('before');
-      next();
-    });
-
     app.get('/', function(req, res, next){
       calls.push('GET /')
       next();
@@ -152,8 +128,8 @@ describe('app.router', function(){
       var app = express();
 
       app.get(/^\/user\/([0-9]+)\/(view|edit)?$/, function(req, res){
-        var id = req.params.shift()
-          , op = req.params.shift();
+        var id = req.params[0]
+          , op = req.params[1];
         res.end(op + 'ing user ' + id);
       });
 
@@ -328,8 +304,8 @@ describe('app.router', function(){
       var app = express();
 
       app.get('/api/*.*', function(req, res){
-        var resource = req.params.shift()
-          , format = req.params.shift();
+        var resource = req.params[0]
+          , format = req.params[1];
         res.end(resource + ' as ' + format);
       });
 
@@ -563,6 +539,30 @@ describe('app.router', function(){
     })
   })
 
+  describe('when next("route") is called', function(){
+    it('should jump to next route', function(done){
+      var app = express()
+
+      function fn(req, res, next){
+        res.set('X-Hit', '1')
+        next('route')
+      }
+
+      app.get('/foo', fn, function(req, res, next){
+        res.end('failure')
+      });
+
+      app.get('/foo', function(req, res){
+        res.end('success')
+      })
+
+      request(app)
+      .get('/foo')
+      .expect('X-Hit', '1')
+      .expect(200, 'success', done)
+    })
+  })
+
   describe('when next(err) is called', function(){
     it('should break out of app.router', function(done){
       var app = express()
@@ -615,6 +615,45 @@ describe('app.router', function(){
     request(app)
     .get('/account/edit')
     .expect('editing user 12', done);
+  })
+
+  it('should run in order added', function(done){
+    var app = express();
+    var path = [];
+
+    app.get('*', function(req, res, next){
+      path.push(0);
+      next();
+    });
+
+    app.get('/user/:id', function(req, res, next){
+      path.push(1);
+      next();
+    });
+
+    app.use(function(req, res, next){
+      path.push(2);
+      next();
+    });
+
+    app.all('/user/:id', function(req, res, next){
+      path.push(3);
+      next();
+    });
+
+    app.get('*', function(req, res, next){
+      path.push(4);
+      next();
+    });
+
+    app.use(function(req, res, next){
+      path.push(5);
+      res.end(path.join(','))
+    });
+
+    request(app)
+    .get('/user/1')
+    .expect(200, '0,1,2,3,4,5', done);
   })
 
   it('should be chainable', function(){

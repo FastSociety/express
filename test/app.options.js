@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('./support/http');
+  , request = require('supertest');
 
 describe('OPTIONS', function(){
   it('should default to the routes defined', function(done){
@@ -31,7 +31,7 @@ describe('OPTIONS', function(){
     var router = new express.Router();
 
     router.get('/users', function(req, res){});
-    app.use(router.middleware);
+    app.use(router);
     app.get('/other', function(req, res){});
 
     request(app)
