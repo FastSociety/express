@@ -1,10 +1,11 @@
+
 /**
  * Module dependencies.
  */
 
-var http = require('http');
-var path = require('path');
-var extname = path.extname;
+var http = require('http')
+  , path = require('path')
+  , extname = path.extname
 
 /**
  * Expose `GithubView`.

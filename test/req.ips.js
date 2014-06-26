@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 describe('req', function(){
   describe('.ips', function(){
@@ -19,21 +19,6 @@ describe('req', function(){
           .get('/')
           .set('X-Forwarded-For', 'client, p1, p2')
           .expect('["client","p1","p2"]', done);
-        })
-
-        it('should stop at first untrusted', function(done){
-          var app = express();
-
-          app.set('trust proxy', 2);
-
-          app.use(function(req, res, next){
-            res.send(req.ips);
-          });
-
-          request(app)
-          .get('/')
-          .set('X-Forwarded-For', 'client, p1, p2')
-          .expect('["p1","p2"]', done);
         })
       })
 

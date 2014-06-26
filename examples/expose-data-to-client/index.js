@@ -1,7 +1,6 @@
 
-var express = require('../..');
-var logger = require('morgan');
-var app = express();
+var express = require('../..')
+  , app = express();
 
 app.set('view engine', 'jade');
 app.set('views', __dirname + '/views');
@@ -21,10 +20,10 @@ User.prototype.toJSON = function(){
   return {
     id: this.id,
     name: this.name
-  };
+  }
 };
 
-app.use(logger('dev'));
+app.use(express.logger('dev'));
 
 // earlier on expose an object
 // that we can tack properties on.
@@ -57,8 +56,5 @@ app.get('/user', function(req, res){
   res.render('page');
 });
 
-/* istanbul ignore next */
-if (!module.parent) {
-  app.listen(3000);
-  console.log('Express started on port 3000');
-}
+app.listen(3000);
+console.log('app listening on port 3000');

@@ -2,10 +2,8 @@
  * Module dependencies.
  */
 
-var express = require('../..');
-var hash = require('./pass').hash;
-var bodyParser = require('body-parser');
-var session = require('express-session');
+var express = require('../..')
+  , hash = require('./pass').hash;
 
 var app = module.exports = express();
 
@@ -16,14 +14,15 @@ app.set('views', __dirname + '/views');
 
 // middleware
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(session({ secret: 'shhhh, very secret' }));
+app.use(express.bodyParser());
+app.use(express.cookieParser('shhhh, very secret'));
+app.use(express.session());
 
 // Session-persisted message middleware
 
 app.use(function(req, res, next){
-  var err = req.session.error;
-  var msg = req.session.success;
+  var err = req.session.error
+    , msg = req.session.success;
   delete req.session.error;
   delete req.session.success;
   res.locals.message = '';
@@ -63,7 +62,7 @@ function authenticate(name, pass, fn) {
     if (err) return fn(err);
     if (hash == user.hash) return fn(null, user);
     fn(new Error('invalid password'));
-  });
+  })
 }
 
 function restrict(req, res, next) {
@@ -76,7 +75,7 @@ function restrict(req, res, next) {
 }
 
 app.get('/', function(req, res){
-  res.redirect('/login');
+  res.redirect('login');
 });
 
 app.get('/restricted', restrict, function(req, res){
@@ -99,9 +98,9 @@ app.post('/login', function(req, res){
   authenticate(req.body.username, req.body.password, function(err, user){
     if (user) {
       // Regenerate session when signing in
-      // to prevent fixation
+      // to prevent fixation 
       req.session.regenerate(function(){
-        // Store the user's primary key
+        // Store the user's primary key 
         // in the session store to be retrieved,
         // or in this case the entire user object
         req.session.user = user;
@@ -114,12 +113,11 @@ app.post('/login', function(req, res){
       req.session.error = 'Authentication failed, please check your '
         + ' username and password.'
         + ' (use "tj" and "foobar")';
-      res.redirect('/login');
+      res.redirect('login');
     }
   });
 });
 
-/* istanbul ignore next */
 if (!module.parent) {
   app.listen(3000);
   console.log('Express started on port 3000');

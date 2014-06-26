@@ -1,14 +1,21 @@
+
 // first:
 // $ npm install redis
 // $ redis-server
 
 var express = require('../..');
-var session = require('express-session');
 
 var app = express();
 
+app.use(express.logger('dev'));
+
+// Required by session() middleware
+// pass the secret for signed cookies
+// (required by session())
+app.use(express.cookieParser('keyboard cat'));
+
 // Populates req.session
-app.use(session({ secret: 'keyboard cat' }));
+app.use(express.session());
 
 app.get('/', function(req, res){
   var body = '';
@@ -21,8 +28,5 @@ app.get('/', function(req, res){
   res.send(body + '<p>viewed <strong>' + req.session.views + '</strong> times.</p>');
 });
 
-/* istanbul ignore next */
-if (!module.parent) {
-  app.listen(3000);
-  console.log('Express started on port 3000');
-}
+app.listen(3000);
+console.log('Express app started on port 3000');

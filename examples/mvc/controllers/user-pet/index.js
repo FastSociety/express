@@ -1,6 +1,3 @@
-/**
- * Module dependencies.
- */
 
 var db = require('../../db');
 
@@ -11,7 +8,7 @@ exports.create = function(req, res, next){
   var id = req.params.user_id;
   var user = db.users[id];
   var body = req.body;
-  if (!user) return next('route');
+  if (!user) return next(new Error('User not found'));
   var pet = { name: body.pet.name };
   pet.id = db.pets.push(pet) - 1;
   user.pets.push(pet);

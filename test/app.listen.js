@@ -1,6 +1,6 @@
 
 var express = require('../')
-  , request = require('supertest');
+  , request = require('./support/http');
 
 describe('app.listen()', function(){
   it('should wrap with an HTTP server', function(done){

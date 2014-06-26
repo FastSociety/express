@@ -1,20 +1,14 @@
-/**
- * Module dependencies.
- */
-
 var express = require('../..');
-var logger = require('morgan');
-var session = require('express-session');
-var bodyParser = require('body-parser');
-var methodOverride = require('method-override');
 
 var app = module.exports = express();
 
 // settings
 
-// set our default template engine to "jade"
-// which prevents the need for extensions
-app.set('view engine', 'jade');
+// map .renderFile to ".html" files
+app.engine('html', require('ejs').renderFile);
+
+// make ".html" the default
+app.set('view engine', 'html');
 
 // set views for error and 404 pages
 app.set('views', __dirname + '/views');
@@ -31,19 +25,20 @@ app.response.message = function(msg){
 };
 
 // log
-if (!module.parent) app.use(logger('dev'));
+if (!module.parent) app.use(express.logger('dev'));
 
 // serve static files
 app.use(express.static(__dirname + '/public'));
 
 // session support
-app.use(session({ secret: 'some secret here' }));
+app.use(express.cookieParser('some secret here'));
+app.use(express.session());
 
 // parse request bodies (req.body)
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.bodyParser());
 
-// allow overriding methods in query (?_method=put)
-app.use(methodOverride('_method'));
+// support _method (PUT in forms etc)
+app.use(express.methodOverride());
 
 // expose the "messages" local variable when views are rendered
 app.use(function(req, res, next){
@@ -71,9 +66,16 @@ app.use(function(req, res, next){
 // load controllers
 require('./lib/boot')(app, { verbose: !module.parent });
 
+// assume "not found" in the error msgs
+// is a 404. this is somewhat silly, but
+// valid, you can do whatever you like, set
+// properties, use instanceof etc.
 app.use(function(err, req, res, next){
+  // treat as 404
+  if (~err.message.indexOf('not found')) return next();
+
   // log it
-  if (!module.parent) console.error(err.stack);
+  console.error(err.stack);
 
   // error page
   res.status(500).render('5xx');
@@ -84,8 +86,7 @@ app.use(function(req, res, next){
   res.status(404).render('404', { url: req.originalUrl });
 });
 
-/* istanbul ignore next */
 if (!module.parent) {
   app.listen(3000);
-  console.log('Express started on port 3000');
+  console.log('\n  listening on port 3000\n');
 }

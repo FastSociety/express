@@ -1,12 +1,12 @@
 
 var express = require('../')
-  , request = require('supertest')
+  , request = require('./support/http')
   , utils = require('../lib/utils')
   , assert = require('assert');
 
-var app1 = express();
+var app = express();
 
-app1.use(function(req, res, next){
+app.use(function(req, res, next){
   res.format({
     'text/plain': function(){
       res.send('hey');
@@ -15,7 +15,7 @@ app1.use(function(req, res, next){
     'text/html': function(){
       res.send('<p>hey</p>');
     },
-
+  
     'application/json': function(a, b, c){
       assert(req == a);
       assert(res == b);
@@ -25,7 +25,7 @@ app1.use(function(req, res, next){
   });
 });
 
-app1.use(function(err, req, res, next){
+app.use(function(err, req, res, next){
   if (!err.types) throw err;
   res.send(err.status, 'Supports: ' + err.types.join(', '));
 })
@@ -53,46 +53,14 @@ app3.use(function(req, res, next){
   })
 });
 
-var app4 = express();
-
-app4.get('/', function(req, res, next){
-  res.format({
-    text: function(){ res.send('hey') },
-    html: function(){ res.send('<p>hey</p>') },
-    json: function(){ res.send({ message: 'hey' }) }
-  });
-});
-
-app4.use(function(err, req, res, next){
-  res.send(err.status, 'Supports: ' + err.types.join(', '));
-})
-
 describe('res', function(){
   describe('.format(obj)', function(){
     describe('with canonicalized mime types', function(){
-      test(app1);
+      test(app);
     })
 
     describe('with extnames', function(){
       test(app2);
-    })
-
-    describe('with parameters', function(){
-      var app = express();
-
-      app.use(function(req, res, next){
-        res.format({
-          'text/plain; charset=utf-8': function(){ res.send('hey') },
-          'text/html; foo=bar; bar=baz': function(){ res.send('<p>hey</p>') },
-          'application/json; q=0.5': function(){ res.send({ message: 'hey' }) }
-        });
-      });
-
-      app.use(function(err, req, res, next){
-        res.send(err.status, 'Supports: ' + err.types.join(', '));
-      });
-
-      test(app);
     })
 
     describe('given .default', function(){
@@ -102,31 +70,6 @@ describe('res', function(){
         .set('Accept: text/html')
         .expect('default', done);
       })
-    })
-
-    describe('in router', function(){
-      test(app4);
-    })
-
-    describe('in router', function(){
-      var app = express();
-      var router = express.Router();
-
-      router.get('/', function(req, res, next){
-        res.format({
-          text: function(){ res.send('hey') },
-          html: function(){ res.send('<p>hey</p>') },
-          json: function(){ res.send({ message: 'hey' }) }
-        });
-      });
-
-      router.use(function(err, req, res, next){
-        res.send(err.status, 'Supports: ' + err.types.join(', '));
-      })
-
-      app.use(router)
-
-      test(app)
     })
   })
 })
@@ -150,7 +93,7 @@ function test(app) {
     request(app)
     .get('/')
     .set('Accept', 'text/html; q=.5, text/plain')
-    .expect('Content-Type', 'text/plain; charset=utf-8')
+    .expect('Content-Type', 'text/plain; charset=UTF-8')
     .expect('hey', done);
   })
 
@@ -158,12 +101,12 @@ function test(app) {
     request(app)
     .get('/')
     .set('Accept', 'text/html')
-    .expect('Content-Type', 'text/html; charset=utf-8');
+    .expect('Content-Type', 'text/html; charset=UTF-8');
 
     request(app)
     .get('/')
     .set('Accept', 'text/plain')
-    .expect('Content-Type', 'text/plain; charset=utf-8');
+    .expect('Content-Type', 'text/plain; charset=UTF-8');
 
     request(app)
     .get('/')

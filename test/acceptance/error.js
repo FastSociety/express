@@ -1,6 +1,6 @@
 
 var app = require('../../examples/error')
-  , request = require('supertest');
+  , request = require('../support/http');
 
 describe('error', function(){
   describe('GET /', function(){

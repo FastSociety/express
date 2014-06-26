@@ -1,14 +1,13 @@
 
 var express = require('../')
-  , request = require('supertest')
-  , cookieParser = require('cookie-parser')
+  , request = require('./support/http');
 
 describe('req', function(){
   describe('.signedCookies', function(){
     it('should return a signed JSON cookie', function(done){
       var app = express();
 
-      app.use(cookieParser('secret'));
+      app.use(express.cookieParser('secret'));
 
       app.use(function(req, res){
         if ('/set' == req.path) {

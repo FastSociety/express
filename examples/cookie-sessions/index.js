@@ -1,3 +1,4 @@
+
 /**
  * Module dependencies.
  */
@@ -6,8 +7,14 @@ var express = require('../../');
 
 var app = module.exports = express();
 
+// ignore GET /favicon.ico
+app.use(express.favicon());
+
+// pass a secret to cookieParser() for signed cookies
+app.use(express.cookieParser('manny is cool'));
+
 // add req.session cookie support
-app.use(cookieSession({ secret: 'manny is cool' }));
+app.use(express.cookieSession());
 
 // do something with the session
 app.use(count);
@@ -19,8 +26,7 @@ function count(req, res) {
   res.send('viewed ' + n + ' times\n');
 }
 
-/* istanbul ignore next */
 if (!module.parent) {
   app.listen(3000);
-  console.log('Express started on port 3000');
+  console.log('Express server listening on port 3000');
 }

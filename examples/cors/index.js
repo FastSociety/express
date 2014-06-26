@@ -2,11 +2,9 @@
  * Module dependencies.
  */
 
-var express = require('../..');
-var logger = require('morgan');
-var app = express();
-var bodyParser = require('body-parser');
-var api = express();
+var express = require('../..')
+  , app = express()
+  , api = express();
 
 // app middleware
 
@@ -14,8 +12,8 @@ app.use(express.static(__dirname + '/public'));
 
 // api middleware
 
-api.use(logger('dev'));
-api.use(bodyParser.json());
+api.use(express.logger('dev'));
+api.use(express.bodyParser());
 
 /**
  * CORS support.
